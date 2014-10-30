@@ -1,0 +1,33 @@
+Program = {Alias}, {Voice};
+
+Voice
+    = ":", Instrument, "\n"
+    , {Transition, "\n"};
+
+Transition
+    = "=>", MusicPattern
+    | MusicPattern, "=>", MusicPattern;
+
+MusicPattern
+    = MusicLiteral
+    | MusicPattern, "->", MusicPattern;
+
+MusicLiteral
+    = Chord
+    | Note;
+
+Chord = "[",{Note, ","}, Note, "]";
+
+Note = Tone, Duration;
+
+Tone = Octave, Key;
+
+Octave = Integer;
+
+Key
+    = Key, Modifier
+    | "A" | "B" | "C" | "D" | "E" | "F" | "G";
+
+Modifier = "#" | "b" | Modifier, Modifier;
+
+Alias = Identifier, ":=", MusicPattern;
