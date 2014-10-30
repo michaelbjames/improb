@@ -20,6 +20,8 @@ Chord = "[",{Note, ","}, Note, "]";
 
 Note = Tone, Duration;
 
+Duration = "1" | "2" | "4" | "8" | "16" | "32"
+
 Tone = Octave, Key;
 
 Octave = Integer;
