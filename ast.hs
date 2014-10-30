@@ -23,8 +23,8 @@ data MusicLiteral = Chord [MusicLiteral] | Note Tone Integer
 
 data Tone = Tone {octave :: Integer, key :: Key}
 
-data Key = A | B | C | D | E | F | G | Compound Key Modifier
+data Key = A | B | C | D | E | F | G | Compound Key [Modifier] deriving (Show)
 
-data Modifier = Sharp | Flat | DoubleMod Modifier
+data Modifier = Sharp | Flat deriving (Show)
 
 
