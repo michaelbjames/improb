@@ -1,4 +1,6 @@
-Program = {Alias}, {Voice};
+Program = Tempo, {Alias}, {Voice};
+
+Tempo = Integer;
 
 Voice
     = ":", Instrument, "\n"

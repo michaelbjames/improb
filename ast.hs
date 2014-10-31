@@ -1,15 +1,17 @@
 module AST where
 
-data Program = Program [Alias] [Voice]
+data Program = Program [Alias] Tempo [Voice]
 
 data Alias = Alias
     { identifier :: String
     , pattern :: MusicPattern
     }
 
+type Tempo = Integer
+
 data Voice = Voice Instrument [Transition]
 
-data Instrument = Instrument String
+type Instrument = String
 
 data Transition
     = Intro MusicPattern
@@ -19,9 +21,13 @@ data MusicPattern
     = Single MusicLiteral
     | Continuation MusicPattern MusicPattern
 
-data MusicLiteral = Chord [MusicLiteral] | Note Tone Integer
+data MusicLiteral = Chord [Note] | NoteLiteral Note | Rest Duration deriving (Show)
 
-data Tone = Tone {octave :: Integer, key :: Key}
+data Note = Note Tone Duration deriving (Show)
+
+type Duration = Integer
+
+data Tone = Tone {octave :: Integer, key :: Key} deriving (Show)
 
 data Key = A | B | C | D | E | F | G | Compound Key [Modifier] deriving (Show)
 
