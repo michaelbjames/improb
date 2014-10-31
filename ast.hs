@@ -15,11 +15,11 @@ type Instrument = String
 
 data Transition
     = Intro MusicPattern
-    | Transition MusicPattern MusicPattern
+    | Transition MusicPattern MusicPattern deriving (Show)
 
 data MusicPattern
     = Single MusicLiteral
-    | Continuation MusicPattern MusicPattern
+    | Continuation MusicPattern MusicPattern deriving (Show)
 
 data MusicLiteral = Chord [Note] | NoteLiteral Note | Rest Duration deriving (Show)
 

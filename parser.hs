@@ -13,6 +13,21 @@ import AST
 
 --parseKey :: String -> Either ParseError Key
 
+musicPatternParser :: Parser MusicPattern
+musicPatternParser = chainr1 singleLiteral continuation
+-- thanks http://stuckinaninfiniteloop.blogspot.com/2011/10/left-recursion-in-parsec.html
+    where
+        singleLiteral :: Parser MusicPattern
+        singleLiteral = do
+            ml <- musicLiteralParser
+            return (Single ml)
+
+        continuation :: Parser (MusicPattern -> MusicPattern -> MusicPattern)
+        continuation = do
+            spaces
+            string "->"
+            spaces
+            return Continuation
 
 musicLiteralParser :: Parser MusicLiteral
 musicLiteralParser =
