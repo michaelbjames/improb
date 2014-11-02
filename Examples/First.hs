@@ -7,6 +7,8 @@ import Examples.Motif
 import Examples.Duet
 import Text.Parsec.Error
 
+test = runTestTT testList
+
 testList = TestList
     [ TestLabel "branching" branchingTest
     , TestLabel "motif" motifTest

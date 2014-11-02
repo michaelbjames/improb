@@ -3,8 +3,8 @@ module Examples.Branching where
 import AST
 
 -- TODO: Read in from the actual file and roll in the IO monad
-branchingString = unlines [
-      "tempo: 120"
+branchingString = unlines
+    [ "tempo: 120"
     , ":piano:"
     , "=> (C4,4)"
     , "(C4,4) => (F4,2)"

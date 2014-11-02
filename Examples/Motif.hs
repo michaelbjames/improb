@@ -2,8 +2,8 @@ module Examples.Motif where
 
 import AST
 
-motifString = unlines [
-      "tempo: 60"
+motifString = unlines
+    [ "tempo: 60"
     , "motif := (C4,1) -> (F4,1) -> (G4,1) -> (R,1)"
     , "variation1 := (C4,1) -> (Ab4,1) -> (E4,1) -> (R,1)"
     , "variation2 := (C4,1) -> (F4,1) -> (E4,1) -> (R,1)"
