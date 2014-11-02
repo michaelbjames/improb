@@ -3,18 +3,19 @@ module Parser where
 import Text.Parsec
 import Text.Parsec.String
 import Text.Parsec.Token hiding (natural, identifier)
---import Text.ParserCombinators.Parsec.Token hiding (natural)
 
 import AST
 
+parseProgram input = Text.Parsec.parse programParser "" input
+
 programParser :: Parser Program
 programParser = do
-    aliases <- many1 (try (withSpacing aliasParser))
-    many newline
     tempo <- withSpacing tempoParser
     many newline
+    aliases <- many (try (withSpacing aliasParser))   
+    many newline
     voices <- many1 (withSpacing voiceParser)
-    return (Program aliases tempo voices)
+    return (Program tempo aliases voices)
     where
         withSpacing p = do
             parsed <- p
@@ -40,17 +41,24 @@ aliasParser = do
 voiceParser :: Parser Voice
 voiceParser = do
     instrument <- between (char ':') (char ':') (many1 alphaNum)
-    transitions <- sepBy1 transitionParser newline
+    many newline
+    transitions <- mySepBy1 transitionParser newline
     return (Voice instrument transitions)
+    where
+        mySepBy1 p sep = many1 $ do
+            x <- p
+            many sep
+            return x
 
 transitionParser :: Parser Transition
 transitionParser =
         try intro
-    <|> try transition
+    <|> transition
     where
+        transitionError = "Transition Introduction (=>)"
         intro :: Parser Transition
         intro = do
-            string "=>"
+            string "=>" <?> transitionError
             spaces
             mp <- musicPatternParser
             return (Intro mp)
@@ -59,19 +67,28 @@ transitionParser =
         transition = do
             start <- musicPatternParser
             spaces
-            string "=>"
+            string "=>" <?> transitionError
             spaces
             end <- musicPatternParser
+            many newline
             return (Transition start end)
 
 musicPatternParser :: Parser MusicPattern
-musicPatternParser = chainr1 singleLiteral (try continuation)
+musicPatternParser = chainr1 endMusicNode (try continuation)
 -- thanks http://stuckinaninfiniteloop.blogspot.com/2011/10/left-recursion-in-parsec.html
     where
-        singleLiteral :: Parser MusicPattern
-        singleLiteral = do
+        endMusicNode :: Parser MusicPattern
+        endMusicNode = try single <|> try alias
+
+        single :: Parser MusicPattern
+        single = do
             ml <- musicLiteralParser
             return (Single ml)
+
+        alias :: Parser MusicPattern
+        alias = do
+            name <- many1 alphaNum
+            return (Lookup name)
 
         continuation :: Parser (MusicPattern -> MusicPattern -> MusicPattern)
         continuation = do
@@ -118,7 +135,7 @@ noteParser = do
     spaces
     t <- toneParser
     spaces
-    char ','
+    char ',' <?> "Missing octave, modifier, or note."
     spaces
     d <- natural
     spaces

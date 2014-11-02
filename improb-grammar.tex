@@ -1,0 +1,56 @@
+\documentclass{article}
+\title{ Improb Grammar}
+\usepackage{fullpage}
+\usepackage{syntax}
+\author{Michael James}
+\date{\today}
+
+\setlength{\grammarindent}{6em}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\begin{grammar}
+<program> ::= <tempo> <alias>* <voice>+
+
+<tempo> ::= "tempo :" <natural>
+
+<alias> ::= <identifier> ":=" <musicPattern>
+
+<identifier> ::= as defined by Text.Parsec's `alphanum'
+
+<musicPattern> ::= <musicLiteral> | <identifier> | <musicPattern> "->" <musicPattern>
+
+<musicLiteral> ::= <chord> | <note> | <rest>
+
+<chord> ::= "[" <note> ("," <note>)* "]"
+
+<note> ::= "(" <tone> "," <duration> ")"
+
+<rest> ::= "(R," <duration> ")" 
+
+<tone> ::= <key> <octave>
+
+<key> ::= <key> <modifier> | "A" | "B" | "C" | "D" | "E" | "F" | "G"
+
+<modifier> ::= "#" | "b"
+
+<octave> ::= <natural>
+
+<natural> ::= parsed as a natrual number
+
+<duration> ::= "1" | "2" | "4" | "8" | "16" | "32"
+
+<voice> ::= ":" <instrument> ":" <transition>+
+
+<instrument> ::= <identifier>
+
+<transition> ::= "=>" <musicPattern> | <musicPattern> "=>" <musicPattern>
+
+\end{grammar}
+
+\end{document}
+
+
