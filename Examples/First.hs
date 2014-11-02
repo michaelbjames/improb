@@ -1,7 +1,7 @@
 module Examples.First where
 
 import Test.HUnit hiding (test)
-import Parser
+import Improb.Parser
 import Examples.Branching
 import Examples.Motif
 import Examples.Duet

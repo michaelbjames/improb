@@ -1,7 +1,8 @@
 module Examples.Duet where
 
-import AST
+import Improb.AST
 
+-- TODO: Read in from the actual file and roll in the IO monad
 duetString = unlines
     [ "tempo: 100"
     , "motif := [(C4,1),(G4,2)] -> (F4,1) -> (G4,1) -> (R,1)"

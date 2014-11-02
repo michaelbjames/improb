@@ -1,4 +1,4 @@
-module AST where
+module Improb.AST where
 
 data Program = Program Tempo [Alias] [Voice] deriving (Eq, Show)
 

@@ -1,6 +1,6 @@
 module Examples.Branching where
 
-import AST
+import Improb.AST
 
 -- TODO: Read in from the actual file and roll in the IO monad
 branchingString = unlines

@@ -1,7 +1,8 @@
 module Examples.Motif where
 
-import AST
+import Improb.AST
 
+-- TODO: Read in from the actual file and roll in the IO monad
 motifString = unlines
     [ "tempo: 60"
     , "motif := (C4,1) -> (F4,1) -> (G4,1) -> (R,1)"

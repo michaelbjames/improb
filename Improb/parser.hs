@@ -1,10 +1,10 @@
-module Parser where
+module Improb.Parser where
 
 import Text.Parsec
 import Text.Parsec.String
 import Text.Parsec.Token hiding (natural, identifier)
 
-import AST
+import Improb.AST
 
 parseProgram input = Text.Parsec.parse programParser "" input
 
