@@ -1,0 +1,71 @@
+\documentclass{article}
+
+\title{Introducing Improb}
+\author{Michael James}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+\subsection{Domain}
+Improb is a generative music description language to produce background music for the practicing instrument-dabbler. It is intended to create background riffs for the user to play along with or solo on top of. During a long solo session, the same background music may get boring so Improb has a way to keep things interesting through user-specified probabilistic model. There is a native way to branch to different riffs given certain inputs.
+
+\subsection{Users}
+The users are newbie-programmers who are okay with an instrument of their choice. The language is intended to be approachable to those with experience using the surrounding technologies (i.e., Haskell, the limits of MIDI, state-machines).
+
+Users are expected to know how the basics of music notation. Users should be familiar with notes, rhythm, and chords.
+
+Users will want to produce music that they can play on top of.
+
+\subsection{Design Goals}
+Improb is meant to be an easy to approach language embedded in Haskell. If the user has already gotten over the hurdle of using GHC, then learning and using Improb should come easily. It is intended to be simple, covering most but not all possible musical uses. So musical elements such as tremolo are not yet representable but the language should require minimal documentation to use.
+
+\section{Background}
+Many groups have taken stab at music generation languages and libraries. Initial research suggests there are more libraries for this sort of field than languages (as expected). The m programming language is a turing-complete music generation language but it is obstructively low level for the users Improb targets\footnote{http://www.cs.columbia.edu/~sedwards/classes/2010/w4115-fall/proposals/m.pdf}. There are white-papers about using statistical models to generate music\footnote{http://www.ehu.es/cs-ikerbasque/conklin/papers/aisb03.pdf}. They may be libraries for music generation but my research has not yet found a language for a high-level music description and generation model.
+
+\section{Features}
+Firstly, there is a way to describe notes, durations, and chords. Secondly, to describe relationships between sounds, Improb provides a transition notation from one note or chord to another. If the sounds were nodes in a graph, the transitions would be the directed edges in the graph. Rewriting frequently used notes and chords becomes quickly tedious. So thirdly, Improb permits an aliasing of sequences of notes and chords with transitions so it will be easier to chunk and rewrite sections of a riff progression. Finally to enable more complex patterns and repetitions, there is a simple pattern matching feature to specify what an observed sound or progression will lead to.
+
+There is no runtime system. The compilation system will produce the artifacts. Using packages like Euterpea, Improb will produce MIDIs and may use it as the underlying music representation
+
+\section{Artifacts}
+An Improb program will produce a MIDI file to be played. The primary goal is to produce sound. A MIDI file is replayable (since not every compilation will produce the same MIDI file). If the host language permits it, playing sound during compilation would be a more direct way to achieve the primary goal than producing a MIDI file. It would also be reasonable to produce a musicXML file. This XML variant is used by programs such as Sibelius to import and export music transcriptions.
+
+\section{Use Cases}
+
+Suppose you would like to design a simple bass loop to play while you jam or rap over it. In this example we must write an introductory beat and switch between two beat loops that sound good together: \newline
+\texttt{ => (0a,4)} \newline
+\texttt{ (0a,4) => (0b,4)} \newline
+We must specify what beat to start on, with the \texttt{=> (0a,4)} and then given some note, play something else. The note structure contains information about which octave the note is, 0 here, which tone, and how long to play the tone. This example will produce a MIDI file that plays an A then a B. The file can be played on loop while the user practices their rap.
+\newline
+
+Imagine writing a simple background riff with two "modes", an A mode and a B mode. To keep your improvisations interesting, you would like to switch between the two modes every so often. So the following structure will produce a midi file that occasionally switches between the A mode and the B mode: \newline
+\texttt{ ... } \newline
+\texttt{ AMode => AMode } \newline
+\texttt{ AMode => BMode } \newline
+\texttt{ BMode => BMode } \newline
+\texttt{ BMode => AMode } \newline
+Here there are aliases that define what the AMode is and what the BMode is. This code will permit modes to transition to themselves or to the opposing mode (with equal probability). Again, this code will produce a MIDI file.
+\newline
+
+In the following example we would like to generate an even more complex branching loop. Using knowledge about our motif and how these progressions sound together, we know that any of our aliases followed by specific notes or other aliases have the sound we desire. So this permits more complex permutations of progressions by matching with more or less information: \newline
+\texttt{ ... } \newline
+\texttt{ Motif => HappyVerse1 } \newline
+\texttt{ Motif -> minorTransition => SadVerse1 } \newline
+\texttt{ ... } \newline
+
+
+\section{Evaluation}
+At minimum, Improb should be able to produce a MIDI file that is correct according to the users specification. Further, the language should be considered successful for a month-long project if someone besides the author can use the language to produce a MIDI file.
+
+\section{Stretch Goals}
+A month is not a long time to create a new programming language, even if it is piggybacking on Haskell. The proposal represents the kernel of what Improb must be capable of. However, there are a couple of possible features that would add significant expressive power. If the kernel of the language is quickly written then any of the following potential features will add complexity and power to the language.
+\begin{enumerate}
+    \item Arbitrary Probabilities. Improb's kernel supports only rational probabilities for branching between $N$ possible paths, the user may specify a path more than once to give it more weight. Instead, a syntactic category to embed probabilities could be helpful for producing longer MIDI files and controlling behavior more tightly. An example line may look like \texttt{Motif => <60\%> Bridge}.
+    \item Pattern matching with holes. Improb will only continue a probabilistic walk of the possible transitions if the predicate is exactly matched. Adding a partial-match ability (e.g., \texttt{A -> \char`_ -> G => C}, where \texttt{\char`_} is anything) will reduce required code for more complex patterns.
+
+    \item Functions. Improb could support functions that operate on notes or transitions between notes. This would permit a \texttt{transpose} function, or any other user defined function. It is not entirely clear how pattern matching would work with functions.
+\end{enumerate}
+
+\end{document}
