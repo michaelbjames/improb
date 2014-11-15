@@ -10,6 +10,7 @@ parseProgram input = Text.Parsec.parse programParser "" input
 
 programParser :: Parser Program
 programParser = do
+    many newline
     tempo <- withSpacing tempoParser
     many newline
     aliases <- many (try (withSpacing aliasParser))   
