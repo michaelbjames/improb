@@ -10,8 +10,10 @@ import Prelude hiding (lookup)
 import Language.Haskell.TH 
 import Language.Haskell.TH.Syntax(Name(..), NameFlavour(..), showName)
 import Data.HashMap.Strict (HashMap, insert, empty, lookup)
-
 import qualified Data.Maybe as Maybe
+
+import qualified Euterpea as EU
+import Codec.Midi (Midi)
 
 import System.IO.Unsafe (unsafePerformIO)
 import Control.Exception.Base
@@ -59,12 +61,35 @@ genMap = undefined
 walkTransition :: HashMap MusicPattern MusicPattern -> [MusicLiteral]
 walkTransition = undefined
 
---toEuterpea :: [MusicLiteral] -> Performance
+toEuterpea :: [MusicLiteral] -> EU.Performance
+toEuterpea = undefined
 
---pickInstrument :: Instrument -> UserPatchMap
+litToEuterpea :: MusicLiteral -> EU.Music EU.Pitch
+litToEuterpea (Rest dur) = EU.Prim (EU.Rest (1/ (toRational dur)))
+litToEuterpea (Chord ns) = foldr1 ((EU.:+:)) (map (EU.Prim . noteToEuterpea) ns)
+litToEuterpea (NoteLiteral n) = EU.Prim (noteToEuterpea n)
 
---makethemidi :: Performance -> UserPatchMap -> Midi
+noteToEuterpea :: Note -> EU.Primitive EU.Pitch
+noteToEuterpea (Note t dur) =
+    EU.Note (1/ (toRational dur)) (toPitchClass $ key t, fromInteger $ octave t)
 
---writeMidi :: Performable a => FilePath -> Music a -> IO ()
+toPitchClass :: Key -> EU.PitchClass
+toPitchClass A = EU.A
+toPitchClass B = EU.B
+toPitchClass C = EU.C
+toPitchClass D = EU.D
+toPitchClass E = EU.E
+toPitchClass F = EU.F
+toPitchClass G = EU.G
+toPitchClass (Compound k ms) = error "unimplemented"
+
+pickInstrument :: Instrument -> EU.UserPatchMap
+pickInstrument = undefined
+
+makethemidi :: EU.Performance -> EU.UserPatchMap -> Midi
+makethemidi = undefined
+
+writeMidi :: EU.Performable a => FilePath -> EU.Music a -> IO ()
+writeMidi = undefined
 
 
