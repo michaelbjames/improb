@@ -30,7 +30,7 @@ type Duration = Integer
 
 data Tone = Tone {octave :: Integer, key :: Key} deriving (Eq, Show)
 
-data Key = A | B | C | D | E | F | G | Compound Key [Modifier] deriving (Eq, Show)
+data Key = A | B | C | D | E | F | G | Compound Key Modifier deriving (Eq, Show)
 
 data Modifier = Sharp | Flat deriving (Eq, Show)
 

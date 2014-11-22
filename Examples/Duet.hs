@@ -43,7 +43,7 @@ duetExpects = Right (
             { identifier = "v1"
             , pattern =
                 Continuation (Single (NoteLiteral (Note (Tone {octave = 4, key = C}) 1)))
-                (Continuation (Single (NoteLiteral (Note (Tone {octave = 4, key = Compound A [Flat]}) 1)))
+                (Continuation (Single (NoteLiteral (Note (Tone {octave = 4, key = Compound A Flat}) 1)))
                 (Continuation (Single (NoteLiteral (Note (Tone {octave = 4, key = E}) 1)))
                 (Single (Rest 1))))
             }

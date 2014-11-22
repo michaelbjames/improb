@@ -156,7 +156,7 @@ keyParser =
     where
         parseCompound = do
             k <- baseKeyParser
-            mods <- many1 modifierParser
+            mods <- modifierParser
             return (Compound k mods)
 
         baseKeyParser =

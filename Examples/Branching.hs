@@ -14,7 +14,7 @@ branchingString = unlines
 
 c44 = (Single (NoteLiteral (Note (Tone {octave = 4, key = C}) 4)))
 f42 = (Single (NoteLiteral (Note (Tone {octave = 4, key = F}) 2)))
-eb42 = (Single (NoteLiteral (Note (Tone {octave = 4, key = Compound E [Flat]}) 2)))
+eb42 = (Single (NoteLiteral (Note (Tone {octave = 4, key = Compound E Flat}) 2)))
 g44 = (Single (NoteLiteral (Note (Tone {octave = 4, key = G}) 4)))
 
 branchExpects = Right (
