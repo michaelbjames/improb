@@ -43,10 +43,28 @@ expandTransitions store voices = map unAliasVoice voices
         unAliasTransition (Transition mpL mpR) =
             (Transition (unAlias mpL) (unAlias mpR))
 
+        --BUG : Infinite loop possible with mutually recursive aliases
         unAlias :: MusicPattern -> MusicPattern
         unAlias (Single ml) = Single ml
         unAlias (Continuation head rest) = Continuation (unAlias head) (unAlias rest)
         unAlias (Lookup str) =
             case lookup str store of
-                Just mp -> mp
+                Just mp -> unAlias mp
                 Nothing -> error $ "Alias (" ++ str ++ "), not found"
+
+-- The voice is guaranteed to be without aliases
+genMap :: Voice -> HashMap MusicPattern MusicPattern
+genMap = undefined
+
+walkTransition :: HashMap MusicPattern MusicPattern -> [MusicLiteral]
+walkTransition = undefined
+
+--toEuterpea :: [MusicLiteral] -> Performance
+
+--pickInstrument :: Instrument -> UserPatchMap
+
+--makethemidi :: Performance -> UserPatchMap -> Midi
+
+--writeMidi :: Performable a => FilePath -> Music a -> IO ()
+
+
