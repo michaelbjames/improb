@@ -25,7 +25,7 @@ make_improb_declarations :: Program -> Q [Dec]
 make_improb_declarations = genImprobDecl
 
 genImprobDecl :: Program -> Q [Dec]
-genImprobDecl (Program t aliases voices) = do
+genImprobDecl (Program tempo aliases voices) = do
     let aliasStore = mkAliases aliases
         unAliased = expandTransitions aliasStore voices
         voiceMapping :: [(Voice, IT.MarkovMap)]
@@ -33,7 +33,7 @@ genImprobDecl (Program t aliases voices) = do
         finalTransitions :: [IO (Instrument, [MusicLiteral])]
         finalTransitions = (map walkTransition voiceMapping)
     transitions <- runIO . sequence $ finalTransitions
-    let euterpeaPerformance = translateToEuterpea transitions
+    let euterpeaPerformance = translateToEuterpea tempo transitions
         finalMidi = makethemidi euterpeaPerformance
     runIO (EU.exportMidiFile "improb.mid" finalMidi)
     let debug = show $ transitions
@@ -96,7 +96,7 @@ walkTransition ((Voice instrument transitions), store) = do
 
 
 
-translateToEuterpea :: [(Instrument, [MusicLiteral])] -> EU.Performance
+translateToEuterpea :: Tempo -> [(Instrument, [MusicLiteral])] -> EU.Performance
 translateToEuterpea = toEuterpea
 
 makethemidi :: EU.Performance -> Midi
