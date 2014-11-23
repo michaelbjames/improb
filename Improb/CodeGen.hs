@@ -32,8 +32,11 @@ genImprobDecl (Program t aliases voices) = do
         voiceMapping = map (\x -> (x, genMap x)) unAliased
         finalTransitions :: [IO (Instrument, [MusicLiteral])]
         finalTransitions = (map walkTransition voiceMapping)
-    d <- runIO . sequence $ finalTransitions
-    let debug = show $ d
+    transitions <- runIO . sequence $ finalTransitions
+    let euterpeaPerformance = translateToEuterpea transitions
+        finalMidi = makethemidi euterpeaPerformance
+    runIO (EU.exportMidiFile "improb.mid" finalMidi)
+    let debug = show $ transitions
     [d| a = $([|debug|] ) |]
 
 mkAliases :: [Alias] -> HashMap String MusicPattern
@@ -93,16 +96,10 @@ walkTransition ((Voice instrument transitions), store) = do
 
 
 
-translateToEuterpea :: (Instrument, [MusicLiteral]) -> EU.Performance
+translateToEuterpea :: [(Instrument, [MusicLiteral])] -> EU.Performance
 translateToEuterpea = toEuterpea
 
-makePatchMap :: [Voice] -> EU.UserPatchMap
-makePatchMap = undefined
-
-makethemidi :: EU.Performance -> EU.UserPatchMap -> Midi
-makethemidi = undefined
-
-writeMidi :: EU.Performable a => FilePath -> EU.Music a -> IO ()
-writeMidi = undefined
+makethemidi :: EU.Performance -> Midi
+makethemidi perf = EU.toMidi perf EU.defUpm
 
 

@@ -5,16 +5,10 @@ import Improb.Quote
 [improb|
 tempo: 120
 
-:piano:
-=> (R,4)
-(R,4) => (R,2)
-(R,4) => (R,3)
-(R,2) => (R,4)
-
-:violin:
-=> (R,3)
-(R,3) => (R,5)
-(R,5) => (R,3)
-(R,3) => (R,4)
+:AcousticGrandPiano:
+=> (C4,1)
+(C4,1) => (F4,1)
+(C4,1) => (Eb4,1)
+(F4,1) => (G4,1)
 |]
 
