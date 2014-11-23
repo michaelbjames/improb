@@ -2,8 +2,9 @@
 
 module Improb.CodeGen where
 
-import Improb.AST as IS
+import Improb.AST
 import Improb.Parser
+import Improb.Transition as IT
 
 import Prelude hiding (lookup)
 
@@ -25,8 +26,13 @@ make_improb_declarations = genImprobDecl
 genImprobDecl :: Program -> Q [Dec]
 genImprobDecl (Program t aliases voices) = do
     let aliasStore = mkAliases aliases
-    let unAliased = expandTransitions aliasStore voices
-    let debug = show unAliased
+        unAliased = expandTransitions aliasStore voices
+        voiceMapping :: [(Voice, IT.MarkovMap)]
+        voiceMapping = map (\x -> (x, genMap x)) unAliased
+        finalTransitions :: [IO [MusicLiteral]]
+        finalTransitions = (map walkTransition voiceMapping)
+    d <- runIO . sequence $ finalTransitions
+    let debug = show $ head d
     [d| a = $([|debug|] ) |]
 
 mkAliases :: [Alias] -> HashMap String MusicPattern
@@ -56,11 +62,35 @@ expandTransitions store voices = map unAliasVoice voices
 
 -- The voice is guaranteed to be without aliases
 -- One MP may map to several options
-genMap :: Voice -> HashMap MusicPattern [MusicPattern]
-genMap = undefined
+-- This is a slow opertion because there is no ordering or hashing on MusicPatterns
+genMap :: Voice -> IT.MarkovMap
+genMap (Voice instrument transitions) =
+    let addToStore (Intro mp) store = store
+        addToStore (Transition mpl mpr) [] = [(mpl, [mpr])]
+        addToStore (Transition mpl mpr) ((left, rights):store) =
+            if (mpl == left)
+                then (left, mpr:rights):store
+                else (left,rights):(addToStore (Transition mpl mpr) store)
+    in
+        foldr addToStore [] transitions
 
-walkTransition :: HashMap MusicPattern MusicPattern -> [MusicLiteral]
-walkTransition = undefined
+walkTransition :: (Voice, IT.MarkovMap) -> IO [MusicLiteral]
+walkTransition ((Voice instrument transitions), store) = do
+    let intros = foldr getIntro [] transitions
+    patternChain <- IT.walkTilDone store intros
+    let literals = flattenPattern patternChain
+    return literals
+
+    where
+        getIntro (Intro mp) intros = mp : intros
+        getIntro _ intros = intros
+
+        flattenPattern :: MusicPattern -> [MusicLiteral]
+        flattenPattern (Single ml) = [ml]
+        flattenPattern (Continuation mpl mpr) = flattenPattern mpl ++ flattenPattern mpr
+        flattenPattern (Lookup _ ) = error "No lookup should be here"
+
+
 
 -- how do i handle multiple voices?
 toEuterpea :: [MusicLiteral] -> EU.Performance

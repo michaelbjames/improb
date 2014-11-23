@@ -23,12 +23,12 @@ transition store (state, gen) =
                 let (index, newGen) = randomR (0, length options - 1) gen
                     nextSegment = options !! index
                 in  Left (rightAlign (Continuation state nextSegment), newGen)
-
-rightAlign :: MusicPattern -> MusicPattern
-rightAlign (Continuation (Continuation mpll mplr) mpr) =
-    (Continuation (rightAlign mpll) (Continuation (rightAlign mplr) mpr))
-rightAlign (Lookup str) = lookupError 
-rightAlign mp = mp
+    where
+        rightAlign :: MusicPattern -> MusicPattern
+        rightAlign (Continuation (Continuation mpll mplr) mpr) =
+            (Continuation (rightAlign mpll) (Continuation (rightAlign mplr) mpr))
+        rightAlign (Lookup str) = lookupError 
+        rightAlign mp = mp
 
 
 possibleTransitions :: MarkovMap -> MusicPattern -> [MusicPattern]
