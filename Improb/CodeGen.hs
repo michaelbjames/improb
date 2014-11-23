@@ -55,7 +55,8 @@ expandTransitions store voices = map unAliasVoice voices
                 Nothing -> error $ "Alias (" ++ str ++ "), not found"
 
 -- The voice is guaranteed to be without aliases
-genMap :: Voice -> HashMap MusicPattern MusicPattern
+-- One MP may map to several options
+genMap :: Voice -> HashMap MusicPattern [MusicPattern]
 genMap = undefined
 
 walkTransition :: HashMap MusicPattern MusicPattern -> [MusicLiteral]
