@@ -30,7 +30,7 @@ rightAlign (Continuation (Continuation mpll mplr) mpr) =
 rightAlign (Lookup str) = lookupError 
 rightAlign mp = mp
 
--- [(MP,MP)] = [(start.)]
+
 possibleTransitions :: MarkovMap -> MusicPattern -> [MusicPattern]
 possibleTransitions store (Continuation mpl mpr) =
     (case lookup (Continuation mpl mpr) store of
@@ -43,6 +43,14 @@ possibleTransitions store (Lookup str) = lookupError
 
 lookupError = error "There should be no lookups at this point"
 
-
-walkTilDone :: MarkovMap -> [MusicPattern] -> MusicPattern
-walkTilDone store beginStates = undefined
+-- BUG: This can infinite loop if there is no final transition pattern
+walkTilDone :: MarkovMap -> [MusicPattern] -> IO MusicPattern
+walkTilDone store beginStates = do
+    (state, gen) <- begin beginStates
+    keepWalking (state, gen)
+    where
+        keepWalking :: MarkovState -> IO MusicPattern
+        keepWalking markovState =
+            case transition store markovState of
+                Right finalState -> return finalState
+                Left (nextState, nextGen) -> keepWalking (nextState, nextGen)
