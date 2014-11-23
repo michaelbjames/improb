@@ -5,6 +5,7 @@ module Improb.CodeGen where
 import Improb.AST
 import Improb.Parser
 import Improb.Transition as IT
+import Improb.Translation
 
 import Prelude hiding (lookup)
 
@@ -29,10 +30,10 @@ genImprobDecl (Program t aliases voices) = do
         unAliased = expandTransitions aliasStore voices
         voiceMapping :: [(Voice, IT.MarkovMap)]
         voiceMapping = map (\x -> (x, genMap x)) unAliased
-        finalTransitions :: [IO [MusicLiteral]]
+        finalTransitions :: [IO (Instrument, [MusicLiteral])]
         finalTransitions = (map walkTransition voiceMapping)
     d <- runIO . sequence $ finalTransitions
-    let debug = show $ head d
+    let debug = show $ d
     [d| a = $([|debug|] ) |]
 
 mkAliases :: [Alias] -> HashMap String MusicPattern
@@ -74,12 +75,12 @@ genMap (Voice instrument transitions) =
     in
         foldr addToStore [] transitions
 
-walkTransition :: (Voice, IT.MarkovMap) -> IO [MusicLiteral]
+walkTransition :: (Voice, IT.MarkovMap) -> IO (Instrument, [MusicLiteral])
 walkTransition ((Voice instrument transitions), store) = do
     let intros = foldr getIntro [] transitions
     patternChain <- IT.walkTilDone store intros
     let literals = flattenPattern patternChain
-    return literals
+    return (instrument, literals)
 
     where
         getIntro (Intro mp) intros = mp : intros
@@ -92,47 +93,11 @@ walkTransition ((Voice instrument transitions), store) = do
 
 
 
--- how do i handle multiple voices?
-toEuterpea :: [MusicLiteral] -> EU.Performance
-toEuterpea mls =
-    let music = foldr1 (EU.:+:) (map litToEuterpea mls)
-    in  EU.defToPerf music
+translateToEuterpea :: (Instrument, [MusicLiteral]) -> EU.Performance
+translateToEuterpea = toEuterpea
 
-litToEuterpea :: MusicLiteral -> EU.Music EU.Pitch
-litToEuterpea (Rest dur) = EU.Prim (EU.Rest (1/ (toRational dur)))
-litToEuterpea (Chord ns) = foldr1 (EU.:=:) (map (EU.Prim . noteToEuterpea) ns)
-litToEuterpea (NoteLiteral n) = EU.Prim (noteToEuterpea n)
-
-noteToEuterpea :: Note -> EU.Primitive EU.Pitch
-noteToEuterpea (Note t dur) =
-    EU.Note (1/ (toRational dur)) (toPitchClass $ key t, fromInteger $ octave t)
-
-toPitchClass :: Key -> EU.PitchClass
-toPitchClass A = EU.A
-toPitchClass B = EU.B
-toPitchClass C = EU.C
-toPitchClass D = EU.D
-toPitchClass E = EU.E
-toPitchClass F = EU.F
-toPitchClass G = EU.G
-toPitchClass (Compound k m) = case (k,m) of
-    (A, Sharp) -> EU.As
-    (A, Flat)  -> EU.Af
-    (B, Sharp) -> EU.Bs
-    (B, Flat)  -> EU.Bf
-    (C, Sharp) -> EU.Cs
-    (C, Flat)  -> EU.Cf
-    (D, Sharp) -> EU.Ds
-    (D, Flat)  -> EU.Df
-    (E, Sharp) -> EU.Es
-    (E, Flat)  -> EU.Ef
-    (F, Sharp) -> EU.Fs
-    (F, Flat)  -> EU.Ff
-    (G, Sharp) -> EU.Gs
-    (G, Flat)  -> EU.Gf
-
-pickInstrument :: Instrument -> EU.UserPatchMap
-pickInstrument = undefined
+makePatchMap :: [Voice] -> EU.UserPatchMap
+makePatchMap = undefined
 
 makethemidi :: EU.Performance -> EU.UserPatchMap -> Midi
 makethemidi = undefined
