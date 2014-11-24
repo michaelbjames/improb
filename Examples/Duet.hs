@@ -3,6 +3,13 @@ module Examples.Duet where
 
 import Improb.Quote
 
+{-
+This will randomly generate a MIDI file the begins with the motif as defined.
+This example demonstrates how two (or more) instruments can be playing at once.
+So, it is possible to encode an entire band to play some riffs. Each instrument
+will randomly walk its own path through its transition space.
+-}
+
 [improb|
 tempo: 150
 
