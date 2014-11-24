@@ -12,14 +12,11 @@ import Prelude hiding (lookup)
 import Language.Haskell.TH 
 import Language.Haskell.TH.Syntax(Name(..), NameFlavour(..), showName)
 import Data.HashMap.Strict (HashMap, insert, empty, lookup)
+import System.FilePath
 import qualified Data.Maybe as Maybe
 
 import qualified Euterpea as EU
 import Codec.Midi (Midi)
-
-import System.IO.Unsafe (unsafePerformIO)
-import Control.Exception.Base
-import Debug.Trace
 
 make_improb_declarations :: Program -> Q [Dec]
 make_improb_declarations = genImprobDecl
@@ -32,9 +29,12 @@ genImprobDecl (Program tempo aliases voices) = do
         voiceMapping = map (\x -> (x, genMap x)) unAliased
         finalTransitions :: [IO (Instrument, [MusicLiteral])]
         finalTransitions = (map walkTransition voiceMapping)
+    loc <- location
     transitions <- runIO . sequence $ finalTransitions
     let euterpeaMusic = translateToEuterpea tempo transitions
-    runIO (EU.writeMidi "improb.mid" euterpeaMusic)
+        filename = loc_filename loc
+        newFilename = (dropExtension filename) <.> "mid"
+    runIO (EU.writeMidi newFilename euterpeaMusic)
     let debug = show $ euterpeaMusic
     [d| _ = $([|debug|])|]
 

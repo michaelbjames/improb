@@ -2,9 +2,9 @@ module Examples.First where
 
 import Test.HUnit hiding (test)
 import Improb.Parser
-import Examples.Branching
-import Examples.Motif
-import Examples.Duet
+import Examples.Tests.Branching
+import Examples.Tests.Motif
+import Examples.Tests.Duet
 import Text.Parsec.Error
 
 test = runTestTT testList
