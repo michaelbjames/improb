@@ -33,10 +33,9 @@ genImprobDecl (Program tempo aliases voices) = do
         finalTransitions :: [IO (Instrument, [MusicLiteral])]
         finalTransitions = (map walkTransition voiceMapping)
     transitions <- runIO . sequence $ finalTransitions
-    let euterpeaPerformance = translateToEuterpea tempo transitions
-        finalMidi = makethemidi euterpeaPerformance
-    runIO (EU.exportMidiFile "improb.mid" finalMidi)
-    let debug = show $ transitions
+    let euterpeaMusic = translateToEuterpea tempo transitions
+    runIO (EU.writeMidi "improb.mid" euterpeaMusic)
+    let debug = show $ euterpeaMusic
     [d| a = $([|debug|] ) |]
 
 mkAliases :: [Alias] -> HashMap String MusicPattern
@@ -96,10 +95,8 @@ walkTransition ((Voice instrument transitions), store) = do
 
 
 
-translateToEuterpea :: Tempo -> [(Instrument, [MusicLiteral])] -> EU.Performance
+translateToEuterpea :: Tempo -> [(Instrument, [MusicLiteral])] -> EU.Music EU.Pitch
 translateToEuterpea = toEuterpea
 
-makethemidi :: EU.Performance -> Midi
-makethemidi perf = EU.toMidi perf EU.defUpm
 
 
