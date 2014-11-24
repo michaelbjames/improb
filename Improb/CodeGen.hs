@@ -36,7 +36,7 @@ genImprobDecl (Program tempo aliases voices) = do
     let euterpeaMusic = translateToEuterpea tempo transitions
     runIO (EU.writeMidi "improb.mid" euterpeaMusic)
     let debug = show $ euterpeaMusic
-    [d| a = $([|debug|] ) |]
+    [d| _ = $([|debug|])|]
 
 mkAliases :: [Alias] -> HashMap String MusicPattern
 mkAliases = foldr (\a db -> insert (identifier a) (pattern a) db) empty
@@ -64,8 +64,8 @@ expandTransitions store voices = map unAliasVoice voices
                 Nothing -> error $ "Alias (" ++ str ++ "), not found"
 
 -- The voice is guaranteed to be without aliases
--- One MP may map to several options
 -- This is a slow opertion because there is no ordering or hashing on MusicPatterns
+-- So we must use a data structure with only Eq and not Ord or Hashable
 genMap :: Voice -> IT.MarkovMap
 genMap (Voice instrument transitions) =
     let addToStore (Intro mp) store = store

@@ -40,14 +40,25 @@ possibleTransitions store (Single ml) =
     maybe [] id $ lookup (Single ml) store
 possibleTransitions store (Lookup str) = lookupError
 
+willTerminate :: MarkovMap -> Bool
+willTerminate store =
+    let ends :: [(MusicPattern, MusicPattern)] -- [(pattern match, transition)]
+        ends = foldr (++) [] $ map (\(x,ys) -> map ((,) x ) ys) store
+        startHasEnd (start, transition) = (start, possibleTransitions store transition)
+        endPoints = filter (\(st, trans) -> (length trans) == 0 ) $ map startHasEnd ends
+    in
+        length endPoints > 0
 
 lookupError = error "There should be no lookups at this point"
 
--- BUG: This can infinite loop if there is no final transition pattern
+
 walkTilDone :: MarkovMap -> [MusicPattern] -> IO MusicPattern
-walkTilDone store beginStates = do
-    (state, gen) <- begin beginStates
-    keepWalking (state, gen)
+walkTilDone store beginStates =
+    if (willTerminate store)
+    then do
+        (state, gen) <- begin beginStates
+        keepWalking (state, gen)
+    else error "Music cannot loop forever! Add an end node!"
     where
         keepWalking :: MarkovState -> IO MusicPattern
         keepWalking markovState =

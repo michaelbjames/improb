@@ -7,7 +7,6 @@ import Euterpea.IO.MIDI.ToMidi
 import Codec.Midi (Midi)
 
 
--- how do i handle multiple voices?
 toEuterpea :: Tempo -> [(Instrument, [MusicLiteral])] -> EU.Music EU.Pitch
 toEuterpea tempo voices =
     let euterpeaVoices :: [(EU.InstrumentName, EU.Music EU.Pitch)]
