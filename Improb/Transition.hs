@@ -7,12 +7,12 @@ import System.Random
 type MarkovMap = [(MusicPattern, [MusicPattern])]
 type MarkovState = (MusicPattern, StdGen)
 
-begin :: [MusicPattern] -> IO MarkovState
-begin beginStates = do
-    myGen <- newStdGen
-    let (index, newGen) = randomR (0, length beginStates - 1) myGen
-    let startPattern = beginStates !! index
-    return (startPattern, newGen)
+begin :: StdGen -> [MusicPattern] -> MarkovState
+begin g beginStates =
+    let (index, newGen) = randomR (0, length beginStates - 1) g
+        startPattern = beginStates !! index
+    in
+        (startPattern, newGen)
 
 transition :: MarkovMap -> MarkovState -> Either MarkovState MusicPattern
 transition store (state, gen) =
@@ -52,16 +52,17 @@ willTerminate store =
 lookupError = error "There should be no lookups at this point"
 
 
-walkTilDone :: MarkovMap -> [MusicPattern] -> IO MusicPattern
-walkTilDone store beginStates =
+walkTilDone :: StdGen -> MarkovMap -> [MusicPattern] -> MusicPattern
+walkTilDone g store beginStates =
     if (willTerminate store)
-    then do
-        (state, gen) <- begin beginStates
-        keepWalking (state, gen)
+    then
+        let (state, gen) = begin g beginStates
+        in
+            keepWalking (state, gen)
     else error "Music cannot loop forever! Add an end node!"
     where
-        keepWalking :: MarkovState -> IO MusicPattern
+        keepWalking :: MarkovState -> MusicPattern
         keepWalking markovState =
             case transition store markovState of
-                Right finalState -> return finalState
-                Left (nextState, nextGen) -> keepWalking (nextState, nextGen)
+                Right finalState -> finalState
+                Left markovState -> keepWalking markovState

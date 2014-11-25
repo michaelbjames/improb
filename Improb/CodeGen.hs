@@ -13,6 +13,7 @@ import Language.Haskell.TH
 import Language.Haskell.TH.Syntax(Name(..), NameFlavour(..), showName)
 import Data.HashMap.Strict (HashMap, insert, empty, lookup)
 import System.FilePath
+import System.Random
 import qualified Data.Maybe as Maybe
 
 import qualified Euterpea as EU
@@ -23,19 +24,23 @@ make_improb_declarations = genImprobDecl
 
 genImprobDecl :: Program -> Q [Dec]
 genImprobDecl (Program tempo aliases voices) = do
+    myGen <- runIO $ newStdGen
+    loc <- location
     let aliasStore = mkAliases aliases
         unAliased = expandTransitions aliasStore voices
+        
         voiceMapping :: [(Voice, IT.MarkovMap)]
         voiceMapping = map (\x -> (x, genMap x)) unAliased
-        finalTransitions :: [IO (Instrument, [MusicLiteral])]
-        finalTransitions = (map walkTransition voiceMapping)
-    loc <- location
-    transitions <- runIO . sequence $ finalTransitions
-    let euterpeaMusic = translateToEuterpea tempo transitions
+
+        finalTransitions :: [(Instrument, [MusicLiteral])]
+        finalTransitions = (map (walkTransition myGen) voiceMapping)
+
+        euterpeaMusic :: EU.Music EU.Pitch
+        euterpeaMusic = translateToEuterpea tempo finalTransitions
+        debug = show $ euterpeaMusic
         filename = loc_filename loc
         newFilename = (dropExtension filename) <.> "mid"
     runIO (EU.writeMidi newFilename euterpeaMusic)
-    let debug = show $ euterpeaMusic
     [d| _ = $([|debug|])|]
 
 mkAliases :: [Alias] -> HashMap String MusicPattern
@@ -77,12 +82,13 @@ genMap (Voice instrument transitions) =
     in
         foldr addToStore [] transitions
 
-walkTransition :: (Voice, IT.MarkovMap) -> IO (Instrument, [MusicLiteral])
-walkTransition ((Voice instrument transitions), store) = do
+walkTransition :: StdGen -> (Voice, IT.MarkovMap) -> (Instrument, [MusicLiteral])
+walkTransition g ((Voice instrument transitions), store) =
     let intros = foldr getIntro [] transitions
-    patternChain <- IT.walkTilDone store intros
-    let literals = flattenPattern patternChain
-    return (instrument, literals)
+        patternChain = IT.walkTilDone g store intros
+        literals = flattenPattern patternChain
+    in
+        (instrument, literals)
 
     where
         getIntro (Intro mp) intros = mp : intros
