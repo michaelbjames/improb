@@ -23,25 +23,32 @@ make_improb_declarations :: Program -> Q [Dec]
 make_improb_declarations = genImprobDecl
 
 genImprobDecl :: Program -> Q [Dec]
-genImprobDecl (Program tempo aliases voices) = do
-    myGen <- runIO $ newStdGen
+genImprobDecl program = do
+    --myGen <- runIO $ newStdGen
+    let myGen = mkStdGen 0
     loc <- location
-    let aliasStore = mkAliases aliases
-        unAliased = expandTransitions aliasStore voices
-        
-        voiceMapping :: [(Voice, IT.MarkovMap)]
-        voiceMapping = map (\x -> (x, genMap x)) unAliased
-
-        finalTransitions :: [(Instrument, [MusicLiteral])]
-        finalTransitions = (map (walkTransition myGen) voiceMapping)
-
-        euterpeaMusic :: EU.Music EU.Pitch
-        euterpeaMusic = translateToEuterpea tempo finalTransitions
+    let euterpeaMusic = genEuterpeaMusic myGen program
         debug = show $ euterpeaMusic
         filename = loc_filename loc
         newFilename = (dropExtension filename) <.> "mid"
     runIO (EU.writeMidi newFilename euterpeaMusic)
     [d| _ = $([|debug|])|]
+
+genEuterpeaMusic :: StdGen -> Program -> EU.Music EU.Pitch
+genEuterpeaMusic g (Program tempo aliases voices) =
+    let aliasStore = mkAliases aliases
+        unAliased = expandTransitions aliasStore voices
+
+        voiceMapping :: [(Voice, IT.MarkovMap)]
+        voiceMapping = map (\x -> (x, genMap x)) unAliased
+
+        finalTransitions :: [(Instrument, [MusicLiteral])]
+        finalTransitions = (map (walkTransition g) voiceMapping)
+
+        euterpeaMusic :: EU.Music EU.Pitch
+        euterpeaMusic = translateToEuterpea tempo finalTransitions
+    in
+        euterpeaMusic
 
 mkAliases :: [Alias] -> HashMap String MusicPattern
 mkAliases = foldr (\a db -> insert (identifier a) (pattern a) db) empty

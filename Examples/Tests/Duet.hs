@@ -19,6 +19,7 @@ duetString = unlines
     , "v1 => v2"
     , "v1 => motif"
     , "v2 => motif"
+    , "v2 => end"
     , ":cello:"
     , "=> motif"
     , "motif => v1 -> (R,4)"
@@ -85,6 +86,7 @@ duetExpects = Right (
             , Transition (Lookup "v1") (Lookup "v2")
             , Transition (Lookup "v1") (Lookup "motif")
             , Transition (Lookup "v2") (Lookup "motif")
+            , Transition (Lookup "v2") (Lookup "end")
             ]
         , Voice "cello"
             [ Intro (Lookup "motif")
