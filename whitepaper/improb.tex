@@ -50,22 +50,81 @@ An Improb program represents a walk through a variable-memory markov chain.
 \subsection{Features}
 
 \subsection{Syntax}
+The syntax is intentionally simple. There are constructs for notes, rests, chords, and transitions between musical elements. Notes are a tuple of a letter-octave and a duration. The most common musical durations are of the form $1/n$ beats, so the unique information to be conveyed is the inverse duration. For example, the construct \texttt{(C\#4,1)} is the C\# in the 4th octave (i.e., a half setp up from middle C), held for 1 beat.
+A rest does not carry octave information but does carry a duration, so a half-rest looks like \texttt{(R,2)}.
+Chords are a collection of notes, so for the ease of the programmer, they look like lists in other langauges.
+A transition strings together chords, rests, and notes--music literals. The transition operator, \texttt{->}, is sequential composition.
 
 \subsection{Example}
 
+\begin{verbatim}
+[improb|
+tempo: 60
+
+motif := (C4,1) -> (F4,1) -> (G4,1)
+variation1 := (C4,1) -> (Ab4,1) -> (E4,1)
+variation2 := (C4,1) -> (F4,1) -> (E4,1)
+end := (C4,1) -> (F4,1) -> (C4,1)
+
+:organ:
+=> motif
+motif => variation1
+motif => variation2
+motif -> variation1 => motif
+variation1 => variation2
+variation2 => variation1
+variation2 => motif
+variation2 => end
+|]
+\end{verbatim}
+Each Improb program has primarily three components. One part sets the tempo in beats per minute. It's very simple but necessary information to create music. An Improb program supports serveral musical intruments playing simultaneously. Each instrument could have its own tempo but this advanced control would make it easier to create musical voices that don't sound pleasant together from syncopation issues.
+
+Next, there is a place for the user to create aliases of musical snippets. These are simple unparameterized aliases for the convenience of the programmer. It would be abysmally frustrating to have to write each note, octave, and duration for every piece of sound in a riff.
+
+Finally there is a section for the structure of the music to be generated. The left side of the \texttt{=>} operator is a pattern to be matched and the right side is the alias, literal, or transition to be played on a match. Improb can show its expressive power over simpler models of music generation here. A first-order markov chain model of music is unable to match differently between \texttt{motif -> variation1 => ... } and \texttt{variation1 => ...}. However Improb makes a difference between these two events. Playing \texttt{motif} then \texttt{variation1} may have a different musical feeling or contex than just playing \texttt{variation1}, so it makes sense to allow the programmer to branch on this difference.
+
+There may be serval voices in one Improb program, so that a whole band may be simulated.
+
+!MULTIVOICE EXAMPLE HERE!
+
 \subsection{Output}
+An Improb program generates a MIDI file as output on compilation. The MIDI plays the riffs as specified in the program.
+
+Improb creates the MIDI file when the host Haskell file is compiled, not run. This is done for the convenience of the user and to encourage a certain usage pattern. The quasi-quotation implementation does not create any user-accessible bindings, it writes to the filesystem on compilation. An Improb program is meant to sit alone in a Haskell file, without other Haskell code, because Improb would become a fully-fledged standalone language given more time. In the mean time, it should not encourage a mixed-language usage. By writing the MIDI file on compilation, the language eliminates an extra step that does not have to be there--running the program.
+
+The MIDI file is random walk over a higher-order markov chain. So, the file may be different per compilation if there are branchable statements in the program. A MIDI file may be played repeatedly but it is interesting to try new variations of the same structure. Since the programmer specifies the structure, it is up to the compiler to generate new improvisations on that structure.
 
 \section{How it works}
+Translating from an Improb program to a MIDI file is a three-step process. First the aliases are resolved to a simple, flat program structure. Then that structure of pattern matches and musical transitions is converted to a higher-order markov chain which is sampled from. Finally the random music sampling is converted to another music library's encoding so that the external library can write to a MIDI file.
 
 \subsection{Simplification}
+All aliases are unparameterized which permits them all to be resolved to their base components. Aliases may be composed of other aliases, which are resolved until all aliases reach their base music literal componentes of notes, rests, chords, and transitions.
+
+<I SHOULD WRITE MORE ABOUT THIS>
 
 \subsection{Markov Chain}
+Once the program is at its simplest, most verbose representation, it is suitable to be converted to a markov chain. Each instrument has its own markov chain which is generated and sampled from. Each node in the chain has variable memory. The amount of memory a node in the chain has is commensurate to the number of transitions in the pattern match.
+
+After the markov chain's database is constructed from the syntax tree it is checked for termination conditions. This step is essential for the compilation to complete. A program that only goes between a \texttt{(C4,1)} and a \texttt{(F4,1)} will be sampled from infinitely. However since Improb generates a finite MIDI file, the input needs to be guaranteed to terminate. \textbf{needs touching up}
+
+Once each instrument is guaranteed to finish, the compiler takes a random walk over it. The compiler starts at the entry node (i.e., \texttt{=> (...)}). It generates a long sequence of notes, rests, and chords that is some sampling of the musical structure the programmer wrote. At this point, the abstract representation of music can be turned into sound.
 
 \subsection{Euterpea}
+Paul Hudak's Euterpea library is a very powerful music suite for Haskell. It is feature rich and has a high learning curve. It is strictly more powerful than Improb but at a higher start up cost. It has a very expressive core music type along with mechanisms to produce MIDI files.
+\textbf{CITATION NEEDED}
+
+In one phase of Improb's compilation, the random walk of the markov chain is translated to a Euterpea's type system. This is done so that Euterpea can write the music representation to a MIDI file for the user.
 
 \section{Wish List}
 \paragraph{Tools}
+As of this paper's writing, the only built-in tool to help the programmer is a termination condition check. This is tool help catch infinite loops before they happen. There are two primary classes of tools that would greatly aid development in Improb.
+
+There are the tools that help the programmer start using the language. One of the most helpful tools would be something that takes a widely-accepted representation of a musical score (i.e., a Sebelius or Finale document) and generates a possible markov model from it. This sort of tool would let the user read in \textit{The Eye of the Tiger} and modify the structure a bit so he or she could solo on top of it.
+
+The other class of tools enable the programmer to write faster. One such tool might be an integrated development environment that knows about common chord progressions and could autocomplete common elements of music.
+
 \paragraph{Future}
+
 
 \section{Evaluation}
 
