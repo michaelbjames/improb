@@ -15,6 +15,7 @@ v1 -> v2 => motif
 v1 => v2
 v1 => motif
 v2 => motif
+motif => end
 
 :cello:
 => motif

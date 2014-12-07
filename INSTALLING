@@ -1,0 +1,20 @@
+How to setup:
+
+mkdir improb-dist
+cd improb-dist
+
+mkdir sandbox
+cd sandbox
+cabal sandbox init --sandbox .
+cd ..
+
+git clone https://github.com/Euterpea/Euterpea.git
+cd Euterpea
+cabal sandbox init --sandbox ../sandbox
+cabal install
+cd ..
+
+git clone https://github.com/michaelbjames/improb.git
+cd improb
+cabal sandbox init --sandbox ../sandbox
+cabal install

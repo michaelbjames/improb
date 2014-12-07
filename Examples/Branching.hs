@@ -1,29 +1,23 @@
+{-# LANGUAGE QuasiQuotes #-}
 module Examples.Branching where
 
-import Improb.AST
+import Improb.Quote
 
--- TODO: Read in from the actual file and roll in the IO monad
-branchingString = unlines
-    [ "tempo: 120"
-    , ":piano:"
-    , "=> (C4,4)"
-    , "(C4,4) => (F4,2)"
-    , "(C4,4) => (Eb4,2)"
-    , "(F4,2) => (G4,4)"
-    ]
+{-
+This generates a short MIDI file, with a piano (at 120 bpm). The piano will
+start with a C, in the 4th octave, playing for a quarter note. From there, the
+compiler will randomly choose to play either an F or a G. This random walk
+continues until it reaches an endpoint, so the A in this case.
+-}
 
-c44 = (Single (NoteLiteral (Note (Tone {octave = 4, key = C}) 4)))
-f42 = (Single (NoteLiteral (Note (Tone {octave = 4, key = F}) 2)))
-eb42 = (Single (NoteLiteral (Note (Tone {octave = 4, key = Compound E Flat}) 2)))
-g44 = (Single (NoteLiteral (Note (Tone {octave = 4, key = G}) 4)))
+[improb|
+tempo: 120
 
-branchExpects = Right (
-    Program 120 [] [
-        Voice "piano" [
-              Intro c44
-            , Transition c44 f42
-            , Transition c44 eb42
-            , Transition f42 g44
-            ]
-        ]
-    )
+:piano:
+=> (C4,4)
+(C4,4) => (F4,4)
+(C4,4) => (G4,4)
+(G4,4) => (C4,4)
+(F4,4) => (G4,4)
+(G4,4) => (A4,4)
+|]

@@ -2,32 +2,53 @@
 
 module Improb.CodeGen where
 
-import Improb.AST as IS
+import Improb.AST
 import Improb.Parser
+import Improb.Transition as IT
+import Improb.Translation
 
 import Prelude hiding (lookup)
 
 import Language.Haskell.TH 
 import Language.Haskell.TH.Syntax(Name(..), NameFlavour(..), showName)
 import Data.HashMap.Strict (HashMap, insert, empty, lookup)
+import System.FilePath
+import System.Random
 import qualified Data.Maybe as Maybe
 
 import qualified Euterpea as EU
 import Codec.Midi (Midi)
 
-import System.IO.Unsafe (unsafePerformIO)
-import Control.Exception.Base
-import Debug.Trace
-
 make_improb_declarations :: Program -> Q [Dec]
 make_improb_declarations = genImprobDecl
 
 genImprobDecl :: Program -> Q [Dec]
-genImprobDecl (Program t aliases voices) = do
+genImprobDecl program = do
+    --myGen <- runIO $ newStdGen
+    let myGen = mkStdGen 0
+    loc <- location
+    let euterpeaMusic = genEuterpeaMusic myGen program
+        debug = show $ euterpeaMusic
+        filename = loc_filename loc
+        newFilename = (dropExtension filename) <.> "mid"
+    runIO (EU.writeMidi newFilename euterpeaMusic)
+    [d| _ = $([|debug|])|]
+
+genEuterpeaMusic :: StdGen -> Program -> EU.Music EU.Pitch
+genEuterpeaMusic g (Program tempo aliases voices) =
     let aliasStore = mkAliases aliases
-    let unAliased = expandTransitions aliasStore voices
-    let debug = show unAliased
-    [d| a = $([|debug|] ) |]
+        unAliased = expandTransitions aliasStore voices
+
+        voiceMapping :: [(Voice, IT.MarkovMap)]
+        voiceMapping = map (\x -> (x, genMap x)) unAliased
+
+        finalTransitions :: [(Instrument, [MusicLiteral])]
+        finalTransitions = (map (walkTransition g) voiceMapping)
+
+        euterpeaMusic :: EU.Music EU.Pitch
+        euterpeaMusic = translateToEuterpea tempo finalTransitions
+    in
+        euterpeaMusic
 
 mkAliases :: [Alias] -> HashMap String MusicPattern
 mkAliases = foldr (\a db -> insert (identifier a) (pattern a) db) empty
@@ -55,58 +76,40 @@ expandTransitions store voices = map unAliasVoice voices
                 Nothing -> error $ "Alias (" ++ str ++ "), not found"
 
 -- The voice is guaranteed to be without aliases
-genMap :: Voice -> HashMap MusicPattern MusicPattern
-genMap = undefined
+-- This is a slow opertion because there is no ordering or hashing on MusicPatterns
+-- So we must use a data structure with only Eq and not Ord or Hashable
+genMap :: Voice -> IT.MarkovMap
+genMap (Voice instrument transitions) =
+    let addToStore (Intro mp) store = store
+        addToStore (Transition mpl mpr) [] = [(mpl, [mpr])]
+        addToStore (Transition mpl mpr) ((left, rights):store) =
+            if (mpl == left)
+                then (left, mpr:rights):store
+                else (left,rights):(addToStore (Transition mpl mpr) store)
+    in
+        foldr addToStore [] transitions
 
-walkTransition :: HashMap MusicPattern MusicPattern -> [MusicLiteral]
-walkTransition = undefined
+walkTransition :: StdGen -> (Voice, IT.MarkovMap) -> (Instrument, [MusicLiteral])
+walkTransition g ((Voice instrument transitions), store) =
+    let intros = foldr getIntro [] transitions
+        patternChain = IT.walkTilDone g store intros
+        literals = flattenPattern patternChain
+    in
+        (instrument, literals)
 
--- how do i handle multiple voices?
-toEuterpea :: [MusicLiteral] -> EU.Performance
-toEuterpea mls =
-    let music = foldr1 (EU.:+:) (map litToEuterpea mls)
-    in  EU.defToPerf music
+    where
+        getIntro (Intro mp) intros = mp : intros
+        getIntro _ intros = intros
 
-litToEuterpea :: MusicLiteral -> EU.Music EU.Pitch
-litToEuterpea (Rest dur) = EU.Prim (EU.Rest (1/ (toRational dur)))
-litToEuterpea (Chord ns) = foldr1 (EU.:=:) (map (EU.Prim . noteToEuterpea) ns)
-litToEuterpea (NoteLiteral n) = EU.Prim (noteToEuterpea n)
+        flattenPattern :: MusicPattern -> [MusicLiteral]
+        flattenPattern (Single ml) = [ml]
+        flattenPattern (Continuation mpl mpr) = flattenPattern mpl ++ flattenPattern mpr
+        flattenPattern (Lookup _ ) = error "No lookup should be here"
 
-noteToEuterpea :: Note -> EU.Primitive EU.Pitch
-noteToEuterpea (Note t dur) =
-    EU.Note (1/ (toRational dur)) (toPitchClass $ key t, fromInteger $ octave t)
 
-toPitchClass :: Key -> EU.PitchClass
-toPitchClass A = EU.A
-toPitchClass B = EU.B
-toPitchClass C = EU.C
-toPitchClass D = EU.D
-toPitchClass E = EU.E
-toPitchClass F = EU.F
-toPitchClass G = EU.G
-toPitchClass (Compound k m) = case (k,m) of
-    (A, Sharp) -> EU.As
-    (A, Flat)  -> EU.Af
-    (B, Sharp) -> EU.Bs
-    (B, Flat)  -> EU.Bf
-    (C, Sharp) -> EU.Cs
-    (C, Flat)  -> EU.Cf
-    (D, Sharp) -> EU.Ds
-    (D, Flat)  -> EU.Df
-    (E, Sharp) -> EU.Es
-    (E, Flat)  -> EU.Ef
-    (F, Sharp) -> EU.Fs
-    (F, Flat)  -> EU.Ff
-    (G, Sharp) -> EU.Gs
-    (G, Flat)  -> EU.Gf
 
-pickInstrument :: Instrument -> EU.UserPatchMap
-pickInstrument = undefined
+translateToEuterpea :: Tempo -> [(Instrument, [MusicLiteral])] -> EU.Music EU.Pitch
+translateToEuterpea = toEuterpea
 
-makethemidi :: EU.Performance -> EU.UserPatchMap -> Midi
-makethemidi = undefined
-
-writeMidi :: EU.Performable a => FilePath -> EU.Music a -> IO ()
-writeMidi = undefined
 
 
