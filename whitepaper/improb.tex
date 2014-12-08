@@ -4,7 +4,7 @@
 % Requires temporary version of sigplanconf style file provided on
 % PLDI'15 web site.
 % 
-\documentclass[pldi]{sigplanconf-pldi15}
+\documentclass{sigplanconf-pldi15}
 
 %
 % the following standard packages may be helpful, but are not required
@@ -28,26 +28,38 @@
 %
 
 \title{Improb : Probabilistic Improvisation}
+\authorinfo{Michael James}{\texttt{michael.james@tufts.edu}}
 
 \maketitle
 \begin{abstract}
-improb is a simple music generation langauge
-intended to generate riffs that change
-
+Improb is a generative music description language to produce background music for the practicing instrument-dabbler. It is intended to create background riffs for the user to play along with or solo on top of. During a long solo session, the same background music may get boring so Improb has a way to keep things interesting through user-specified probabilistic model. There is a native way to branch to different riffs given certain inputs.
 \end{abstract}
 
 \section{Introduction}
-An Improb program represents a walk through a variable-memory markov chain.
+Musical instruments are meant to be played in front of or with other people. When people are not around, how is one supposed to practice one's ability to play with others? There are loop pedals but they fail to simulate other people because they rarely play a simple loop. There are complex libraries that may take a while to learn and use to simulate music someone else may play. Improb hopes to sit somewhere in this middleground. It is a domain specific language to easily create background music with variations.
 
 \paragraph{Users}
+Those who are familiar with the basics of music theory but are more grounded in the practice of music will feel comfortable with the model of music in Improb. Its users are not expected to have extensive experience at the terminal or in other programming languages; however, they should be knowledgable enough to grasp the intuition of a markov chain with memory. Success in using Improb to create interesting and varying riffs is dependent on the user understanding the markov chain model at the core of Improb.
 
 \paragraph{Background}
+Many groups have taken a stab at music generation libraries. Euterpea is a popular music library for Haskell. It is very expressive and well-steeped in the Haskell abstraction mentality. As a result of some combination of these two, it has a high learning curve. Moreover, it is not a language and therefore errors are placed in the context of the Haskell system.
 
-\section{Goals}
+The m programming language is a turing-complete music generation language but its style requires knowledge of perl-like languages\footnote{http://www.cs.columbia.edu/~sedwards/classes/2010/w4115-fall/proposals/m.pdf}. An imperative style is harder to reason about than a declarative one and Improb hopes to make music generation very easy to think about.
+
+\textbf{one more example}
+
+\paragraph{Goal}
+The goal of Improb is to make it easier and simpler for beginning musicians to use a programmatic musical system for their own benefit. Improb should improve over its competition in terms of ease-of-use. Improb should be easier to understand than complex libraries such as Euterpea.
 
 \section{Improb 101}
-
 \subsection{Features}
+Improb provides an abstraction over tone frequencies so that its users can think about keys (i.e., the A above middle C instead of 440hz). It is not useful for a guitar player to instruct a cellist to play a certain tone, the langauge of western music is common enough that computers should speak it, too, when interacting with a user.
+
+Keys are combined with a duration to make a note. Notes can be combined with one another either as a chord or as a progression. These abstractions are called music literals. The fun part of Improb comes from stringing together music literals to specify the structure of a piece of background music.
+
+Improb also permits the user to denote serval instruments that all play music, each following its own user-defined music structure.
+
+Once the programmer has written everything and he or she is ready to listen to the work, Improb will generate a MIDI file on compilation.
 
 \subsection{Syntax}
 The syntax is intentionally simple. There are constructs for notes, rests, chords, and transitions between musical elements. Notes are a tuple of a letter-octave and a duration. The most common musical durations are of the form $1/n$ beats, so the unique information to be conveyed is the inverse duration. For example, the construct \texttt{(C\#4,1)} is the C\# in the 4th octave (i.e., a half setp up from middle C), held for 1 beat.
@@ -124,9 +136,14 @@ There are the tools that help the programmer start using the language. One of th
 The other class of tools enable the programmer to write faster. One such tool might be an integrated development environment that knows about common chord progressions and could autocomplete common elements of music.
 
 \paragraph{Future}
+There are three primary improvements this author would like to see in Improb. First, a more powerful pattern matching system. Secondly, a more expressive musical model. Thirdly, abstraction methods such as functions.
 
+A higher-order markov model only goes so far. If the pattern matching system supported a regular expression language, then it could generate more variations of the same structure in fewer lines of code. For example, one could write \texttt{v1|v2 => v3} instead of two rules \texttt{v1 => v3} and \texttt{v2 => v3}.
+
+The music model in Improb does not have a way to represent dynamics in music. There are not staccato notes or slurs. A future version of Improb needs a way to denote the \textit{texture} of music.
 
 \section{Evaluation}
+
 
 \section{Acknowledgements}
 
