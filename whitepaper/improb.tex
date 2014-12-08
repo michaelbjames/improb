@@ -32,39 +32,37 @@
 
 \maketitle
 \begin{abstract}
-Improb is a generative music description language to produce background music for the practicing instrument-dabbler. It is intended to create background riffs for the user to play along with or solo on top of. During a long solo session, the same background music may get boring so Improb has a way to keep things interesting through user-specified probabilistic model. There is a native way to branch to different riffs given certain inputs.
+Improb is a generative music description language to produce background music for the practicing instrument-dabbler. It is intended to create background riffs for the user to play along with or solo on top of. During a long solo session, the same background music may get boring so Improb has a way to keep things interesting through user-specified probabilistic model.
 \end{abstract}
 
 \section{Introduction}
-Musical instruments are meant to be played in front of or with other people. When people are not around, how is one supposed to practice one's ability to play with others? There are loop pedals but they fail to simulate other people because they rarely play a simple loop. There are complex libraries that may take a while to learn and use to simulate music someone else may play. Improb hopes to sit somewhere in this middleground. It is a domain specific language to easily create background music with variations.
+Musical instruments are meant to be played in front of or with other people. When people are not around, how is one supposed to practice playing with others? There are loop pedals but they fail to simulate other people because people rarely play a simple loop. There are complex libraries that may take a while to learn and use to simulate music someone else may play. Improb hopes to sit somewhere in this middle ground. It is a domain specific language to easily create background music with variations.
 
 \paragraph{Users}
-Those who are familiar with the basics of music theory but are more grounded in the practice of music will feel comfortable with the model of music in Improb. Its users are not expected to have extensive experience at the terminal or in other programming languages; however, they should be knowledgable enough to grasp the intuition of a markov chain with memory. Success in using Improb to create interesting and varying riffs is dependent on the user understanding the markov chain model at the core of Improb.
+Those who are familiar with the basics of music theory but are more grounded in the practice of music will feel comfortable with the model of music in Improb. Its users are not expected to have extensive experience at the terminal or in other programming languages; however, they should be knowledgeable enough to grasp the intuition of a Markov chain with memory. Success in using Improb to create interesting and varying riffs is dependent on the user understanding the Markov chain model at the core of Improb.
 
 \paragraph{Background}
 Many groups have taken a stab at music generation libraries. Euterpea is a popular music library for Haskell. It is very expressive and well-steeped in the Haskell abstraction mentality. As a result of some combination of these two, it has a high learning curve. Moreover, it is not a language and therefore errors are placed in the context of the Haskell system.
 
-The m programming language is a turing-complete music generation language but its style requires knowledge of perl-like languages\footnote{http://www.cs.columbia.edu/~sedwards/classes/2010/w4115-fall/proposals/m.pdf}. An imperative style is harder to reason about than a declarative one and Improb hopes to make music generation very easy to think about.
+The Chuck language is a turing-complete music generation language but its scope is much larger. It is intended to manipulate any sound, not just notes. Its size makes it harder to quickly understand. It is also an imperative style, which is harder to reason about than a declarative one.
 
-\textbf{one more example}
+The Csound language is a domain specific language for tones but not notes. It is also imperative. A large downside to Csound is how low level it is. Users must specify a tone as a oscillation at a frequency for a duration. This means Csound does not have quite the same audience as Improb.
 
 \paragraph{Goal}
 The goal of Improb is to make it easier and simpler for beginning musicians to use a programmatic musical system for their own benefit. Improb should improve over its competition in terms of ease-of-use. Improb should be easier to understand than complex libraries such as Euterpea.
 
 \section{Improb 101}
 \subsection{Features}
-Improb provides an abstraction over tone frequencies so that its users can think about keys (i.e., the A above middle C instead of 440hz). It is not useful for a guitar player to instruct a cellist to play a certain tone, the langauge of western music is common enough that computers should speak it, too, when interacting with a user.
+Improb provides an abstraction over tone frequencies so that its users can think about keys (i.e., the A above middle C instead of 440hz). It is not useful for a guitar player to instruct a cellist to play a certain tone, the language of western music is common enough that computers should speak it when interacting with a user.
 
 Keys are combined with a duration to make a note. Notes can be combined with one another either as a chord or as a progression. These abstractions are called music literals. The fun part of Improb comes from stringing together music literals to specify the structure of a piece of background music.
 
-Improb also permits the user to denote serval instruments that all play music, each following its own user-defined music structure.
-
-Once the programmer has written everything and he or she is ready to listen to the work, Improb will generate a MIDI file on compilation.
+Improb also permits the user to denote several instruments that all play music, each following its own user-defined music structure. Once the programmer has written everything and he or she is ready to listen to the work, Improb will generate a MIDI file on compilation.
 
 \subsection{Syntax}
-The syntax is intentionally simple. There are constructs for notes, rests, chords, and transitions between musical elements. Notes are a tuple of a letter-octave and a duration. The most common musical durations are of the form $1/n$ beats, so the unique information to be conveyed is the inverse duration. For example, the construct \texttt{(C\#4,1)} is the C\# in the 4th octave (i.e., a half setp up from middle C), held for 1 beat.
+The syntax is intentionally simple. There are constructs for notes, rests, chords, and transitions between musical elements. Notes are a tuple of a letter-octave and a duration. The most common musical durations are of the form $1/n$ beats, so the unique information to be conveyed is the inverse duration. For example, the construct \texttt{(C\#4,1)} is the C\# in the 4th octave (i.e., a half step up from middle C), held for 1 beat.
 A rest does not carry octave information but does carry a duration, so a half-rest looks like \texttt{(R,2)}.
-Chords are a collection of notes, so for the ease of the programmer, they look like lists in other langauges.
+Chords are a collection of notes, so for the ease of the programmer, they look like lists in other languages.
 A transition strings together chords, rests, and notes--music literals. The transition operator, \texttt{->}, is sequential composition.
 
 \subsection{Example}
@@ -81,6 +79,7 @@ end := (C4,1) -> (F4,1) -> (C4,1)
 :organ:
 => motif
 motif => variation1
+motif => variation1
 motif => variation2
 motif -> variation1 => motif
 variation1 => variation2
@@ -89,64 +88,72 @@ variation2 => motif
 variation2 => end
 |]
 \end{verbatim}
-Each Improb program has primarily three components. One part sets the tempo in beats per minute. It's very simple but necessary information to create music. An Improb program supports serveral musical intruments playing simultaneously. Each instrument could have its own tempo but this advanced control would make it easier to create musical voices that don't sound pleasant together from syncopation issues.
+This example defines an organ that will play through the given structure until it eventually reaches the \texttt{end} alias. Each alias defines three notes that play, each for a full measure. There is a motif defined, a couple variations of that motif, and an alias for what notes should play at the end of the piece. The first thing the generated MIDI file will play is the motif, since it is the only introductory piece of music, as the first line: \texttt{=> motif}. From there it has a $\frac{2}{3}$ probability of playing the first variation after that and a $\frac{1}{3}$ probability of playing the second variation, having previously played only the motif.
 
-Next, there is a place for the user to create aliases of musical snippets. These are simple unparameterized aliases for the convenience of the programmer. It would be abysmally frustrating to have to write each note, octave, and duration for every piece of sound in a riff.
+If the program plays a motif then variation1, then there is a 50\% chance of the compiler choosing to play a motif again and a 50\% chance of it playing variation2. This is because the pattern \texttt{motif -> variation1} matches both \texttt{motif -> varation1 => ...} and \texttt{variation1 => ...}, so the underlying Markov chain gives weight proportional to the number of matching nodes--if \texttt{variation1 => ...} were stated twice, it would be twice as likely.
 
-Finally there is a section for the structure of the music to be generated. The left side of the \texttt{=>} operator is a pattern to be matched and the right side is the alias, literal, or transition to be played on a match. Improb can show its expressive power over simpler models of music generation here. A first-order markov chain model of music is unable to match differently between \texttt{motif -> variation1 => ... } and \texttt{variation1 => ...}. However Improb makes a difference between these two events. Playing \texttt{motif} then \texttt{variation1} may have a different musical feeling or contex than just playing \texttt{variation1}, so it makes sense to allow the programmer to branch on this difference.
+If this file were named \texttt{demo.im}, then the compiler would generate a MIDI file representing some stochastic walk of the underlying Markov chain named \texttt{demo.mid}. This file can then be played by the programmer using whatever MIDI player is his or her favorite.
 
-There may be serval voices in one Improb program, so that a whole band may be simulated.
+\subsection{Structure}
+Each Improb program has primarily three components. One part sets the tempo in beats per minute. It's very simple but necessary information to create music. An Improb program supports several musical instruments playing simultaneously. Each instrument could have its own tempo but this advanced control would make it easier to create musical voices that don't sound pleasant together from syncopation issues, so it is not permitted.
 
-!MULTIVOICE EXAMPLE HERE!
+Next, there is a place for the user to create aliases of musical snippets. These are simple unparameterized aliases for the convenience of the programmer. It would be abysmally frustrating to have to write each note, octave, and duration for every piece of sound in a riff. These aliases can be used anywhere throughout the program.
+
+Finally there is a section for the structure of the music to be generated. The left side of the \texttt{=>} operator is a pattern to be matched and the right side is the alias, literal, or transition to be played on a match. Improb can show its expressive power over simpler models of music generation here. A first-order Markov chain model of music is unable to match differently between \texttt{motif -> variation1 => ... } and \texttt{variation1 => ...}. However Improb makes a difference between these two events. Playing \texttt{motif} then \texttt{variation1} may have a different musical feeling or context than just playing \texttt{variation1}, so it makes sense to allow the programmer to branch on this difference. There may be several voices in one Improb program, so that a whole band may be simulated.
 
 \subsection{Output}
 An Improb program generates a MIDI file as output on compilation. The MIDI plays the riffs as specified in the program.
 
 Improb creates the MIDI file when the host Haskell file is compiled, not run. This is done for the convenience of the user and to encourage a certain usage pattern. The quasi-quotation implementation does not create any user-accessible bindings, it writes to the filesystem on compilation. An Improb program is meant to sit alone in a Haskell file, without other Haskell code, because Improb would become a fully-fledged standalone language given more time. In the mean time, it should not encourage a mixed-language usage. By writing the MIDI file on compilation, the language eliminates an extra step that does not have to be there--running the program.
 
-The MIDI file is random walk over a higher-order markov chain. So, the file may be different per compilation if there are branchable statements in the program. A MIDI file may be played repeatedly but it is interesting to try new variations of the same structure. Since the programmer specifies the structure, it is up to the compiler to generate new improvisations on that structure.
+The MIDI file is random walk over a higher-order Markov chain. So, the file may be different per compilation if there are branchable statements in the program. A MIDI file may be played repeatedly but it is interesting to try new variations of the same structure. Since the programmer specifies the structure, it is up to the compiler to generate new improvisations on that structure.
 
 \section{How it works}
-Translating from an Improb program to a MIDI file is a three-step process. First the aliases are resolved to a simple, flat program structure. Then that structure of pattern matches and musical transitions is converted to a higher-order markov chain which is sampled from. Finally the random music sampling is converted to another music library's encoding so that the external library can write to a MIDI file.
+Translating from an Improb program to a MIDI file is a three-step process. First the aliases are resolved to a simple, flat program structure. Then that structure of pattern matches and musical transitions is converted to a higher-order Markov chain which is sampled from. Finally the random music sampling is converted to another music library's encoding so that the external library can write to a MIDI file.
 
 \subsection{Simplification}
-All aliases are unparameterized which permits them all to be resolved to their base components. Aliases may be composed of other aliases, which are resolved until all aliases reach their base music literal componentes of notes, rests, chords, and transitions.
-
-<I SHOULD WRITE MORE ABOUT THIS>
+All aliases are unparameterized which permits them all to be resolved to their base components. Aliases may be composed of other aliases, which are resolved until all aliases reach their base music literal components of notes, rests, chords, and transitions. Aliases are substituted with their definitions in the syntax tree. This process continues until the there are no more aliases in an instrument's structure to be expanded.
 
 \subsection{Markov Chain}
-Once the program is at its simplest, most verbose representation, it is suitable to be converted to a markov chain. Each instrument has its own markov chain which is generated and sampled from. Each node in the chain has variable memory. The amount of memory a node in the chain has is commensurate to the number of transitions in the pattern match.
+Once the program is at its simplest, most verbose representation, it is suitable to be converted to a Markov chain. Each instrument has its own Markov chain which is generated and sampled from. Each node in the chain has variable memory. The amount of memory a node in the chain has is commensurate to the number of transitions in the pattern match.
 
-After the markov chain's database is constructed from the syntax tree it is checked for termination conditions. This step is essential for the compilation to complete. A program that only goes between a \texttt{(C4,1)} and a \texttt{(F4,1)} will be sampled from infinitely. However since Improb generates a finite MIDI file, the input needs to be guaranteed to terminate. \textbf{needs touching up}
+After the Markov chain's database is constructed from the syntax tree it is checked for termination conditions. This step is essential for the compilation to complete. A program that only goes between a \texttt{(C4,1)} and a \texttt{(F4,1)} would be sampled from infinitely. However since Improb generates a finite MIDI file, the input needs to be guaranteed to terminate. So a check is needed to make sure the user wrote a program that \textit{can} be translated to a MIDI file.
 
 Once each instrument is guaranteed to finish, the compiler takes a random walk over it. The compiler starts at the entry node (i.e., \texttt{=> (...)}). It generates a long sequence of notes, rests, and chords that is some sampling of the musical structure the programmer wrote. At this point, the abstract representation of music can be turned into sound.
 
 \subsection{Euterpea}
-Paul Hudak's Euterpea library is a very powerful music suite for Haskell. It is feature rich and has a high learning curve. It is strictly more powerful than Improb but at a higher start up cost. It has a very expressive core music type along with mechanisms to produce MIDI files.
-\textbf{CITATION NEEDED}
+The Euterpea library is a very powerful music suite for Haskell. It is feature rich and has a high learning curve. It is strictly more powerful than Improb but at a higher start up cost. It has a very expressive core music type along with mechanisms to produce MIDI files. This is leveraged to reduce programming errors in the core of Improb--the MIDI implementation is left to another library.
 
-In one phase of Improb's compilation, the random walk of the markov chain is translated to a Euterpea's type system. This is done so that Euterpea can write the music representation to a MIDI file for the user.
+In one phase of Improb's compilation, the random walk of the Markov chain is translated to a Euterpea's type system. This is done so that Euterpea can write the music representation to a MIDI file for the user.
+
+\section{Evaluation}
+Improb's improvements are largely ease-of-use contributions. These goals are inherently harder to measure objectively. Although given more time, an analysis of more of the literature and technical contributions of other libraries and languages could yield information about how Improb stacks up.
+
+Improb's syntax is very simple which could aid adoption. It also does not have complex operations on music literals which means there is little more to learn beyond the syntax of the demo programs. This does make obvious the limits of the language; but, perhaps by making the learning curve flat the language can do well for its niche user base.
+
+It is unclear to the author at this time how complex the Markov chain with memory is to an outsider. It may be easy to grasp. If it is not for someone with a minimal computer science background then Improb will be unable to satisfy its users with its current music structure model.
+
+It may be reasonable to measure the signal-noise ratio of the syntax of this language to others. Perhaps some point-value system may lead to objective and reproducible results. For example, giving points to a language for representing a concept or idea (e.g., note duration). However a researcher bias would influence what traits are assigned what point values. Such an evaluation technique would also unjustly promote code-golf-like languages.
 
 \section{Wish List}
 \paragraph{Tools}
 As of this paper's writing, the only built-in tool to help the programmer is a termination condition check. This is tool help catch infinite loops before they happen. There are two primary classes of tools that would greatly aid development in Improb.
 
-There are the tools that help the programmer start using the language. One of the most helpful tools would be something that takes a widely-accepted representation of a musical score (i.e., a Sebelius or Finale document) and generates a possible markov model from it. This sort of tool would let the user read in \textit{The Eye of the Tiger} and modify the structure a bit so he or she could solo on top of it.
+There are the tools that help the programmer start using the language. One of the most helpful tools would be something that takes a widely-accepted representation of a musical score (i.e., a Sibelius or Finale document) and generates a possible Markov model from it. This sort of tool would let the user read in \textit{The Eye of the Tiger} and modify the structure a bit so he or she could solo on top of it.
 
 The other class of tools enable the programmer to write faster. One such tool might be an integrated development environment that knows about common chord progressions and could autocomplete common elements of music.
 
 \paragraph{Future}
 There are three primary improvements this author would like to see in Improb. First, a more powerful pattern matching system. Secondly, a more expressive musical model. Thirdly, abstraction methods such as functions.
 
-A higher-order markov model only goes so far. If the pattern matching system supported a regular expression language, then it could generate more variations of the same structure in fewer lines of code. For example, one could write \texttt{v1|v2 => v3} instead of two rules \texttt{v1 => v3} and \texttt{v2 => v3}.
+A higher-order Markov model only goes so far. If the pattern matching system supported a regular expression language, then it could generate more variations of the same structure in fewer lines of code. For example, one could write \texttt{v1|v2 => v3} instead of two rules \texttt{v1 => v3} and \texttt{v2 => v3}.
 
 The music model in Improb does not have a way to represent dynamics in music. There are not staccato notes or slurs. A future version of Improb needs a way to denote the \textit{texture} of music.
 
-\section{Evaluation}
-
 
 \section{Acknowledgements}
-
+Thanks to Kathleen Fisher for the suggestion of writing the MIDI file during compilation--and also for teaching this course.
+I would like to thank Andrew Mendelsohn and Jayme Woogerd for suggesting a translation through Euterpea and examples through their Advanced Functional Programming course final project.
 
 
 \bibliographystyle{abbrvnat}
@@ -156,33 +163,23 @@ The music model in Improb does not have a way to represent dynamics in music. Th
 \begin{thebibliography}{}
 \softraggedright
 
-\bibitem[Backus et~al.(1960)]{Backus:60}
-J.~W. Backus, F.~L. Bauer, J.~Green, C.~Katz, J.~McCarthy, A.~J. Perlis,
-  H.~Rutishauser, K.~Samelson, B.~Vauquois, J.~H. Wegstein, A.~van Wijngaarden,
-  and M.~Woodger.
-\newblock Report on the algorithmic language ALGOL 60.
-\newblock \emph{Commun. ACM}, 3\penalty0 (5):\penalty0 299--314, May 1960.
-\newblock ISSN 0001-0782.
-\newblock \doi{10.1145/367236.367262}.
+\bibitem[Boulanger]
+R.~Boulanger
+\newblock An Instrument Design TOOTorial
+\newblock http://www.csounds.com/toots/index.html
 
-\bibitem[Collins(1960)]{Collins:60}
-G.~E. Collins.
-\newblock A method for overlapping and erasure of lists.
-\newblock \emph{Commun. ACM}, 3\penalty0 (12):\penalty0 655--657, December
-  1960.
-\newblock \doi{10.1145/367487.367501}
+\bibitem[Hudak(2011)]{Hudak:11}
+P.~Hudak.
+\newblock The Haskell School of Music.
+\newblock Yale University, New Haven, CT, Version 2.4, February 2012.
+\newblock http://www.cs.yale.edu/homes/hudak/Papers/HSoM.pdf
 
-\bibitem[Lamport(1994)]{Lamport:94}
-L.~Lamport.
-\newblock \emph{{\LaTeX: A Document Preparation System}}.
-\newblock Addison-Wesley, Reading, Massachusetts, 2nd edition, 1994.
+\bibitem[Wang(2008)]{Wang:08}
+G.~Wang.
+\newblock The ChucK Audio Programming Language: A Strongly-timed and On-the-fly Environ/mentality.
+\newblock PhD Thesis, Princeton University, 2008.
 
-\bibitem[McCarthy(1960)]{McCarthy:60}
-J.~McCarthy.
-\newblock Recursive functions of symbolic expressions and their computation by
-  machine, part {I}.
-\newblock \emph{Commun. ACM}, 3\penalty0 (4):\penalty0 184--195, April 1960.
-\newblock \doi{10.1145/367177.367199}
+
 
 \end{thebibliography}
 
